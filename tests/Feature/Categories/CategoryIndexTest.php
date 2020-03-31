@@ -50,7 +50,7 @@ class CategoryIndexTest extends TestCase
 
         $this->json('GET', 'api/categories')
             ->assertSeeInOrder([
-                $anotherCategory->slug, $category->slug
+                $category->slug, $anotherCategory->slug,
             ]);
             
     }
