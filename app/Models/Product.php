@@ -15,8 +15,19 @@ class Product extends Model
     {
     	return 'slug';
     }
-
     
+    public function inStock()
+    {
+        return $this->stockCount() > 0;
+    }
+
+    public function stockCount()
+    {
+        return $this->variations->sum(function ($variation) {
+            return $variation->stockCount();
+        });
+    }
+
 
     public function categories()
     {

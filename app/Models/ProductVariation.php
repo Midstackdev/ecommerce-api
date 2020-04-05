@@ -24,6 +24,17 @@ class ProductVariation extends Model
     	return $this->price->amount() !== $this->product->price->amount();
     }
 
+    public function inStock()
+    {
+    	return (bool) $this->stock->first()->pivot->in_stock;
+    	// return $this->stockCount() > 0;
+    }
+
+    public function stockCount()
+    {
+    	return $this->stock->sum('pivot.stock');
+    }
+
 
 	public function type()
 	{
@@ -33,5 +44,22 @@ class ProductVariation extends Model
 	public function product()
 	{
 		return $this->belongsTo(Product::class);
+	}
+
+
+	public function stocks()
+	{
+		return $this->hasMany(Stock::class);
+	}
+
+	public function stock()
+	{
+		return $this->belongsToMany(
+			ProductVariation::class, 'product_variation_stock_view'
+		)
+			->withPivot([
+				'stock',
+				'in_stock',
+			]);
 	}
 }
