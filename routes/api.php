@@ -8,4 +8,8 @@
 	Route::post('auth/signin', 'Auth\SignInController@action');
 	Route::get('auth/me', 'Auth\MeController@action');
 
-	Route::resource('cart', 'Cart\CartController');
+	Route::resource('cart', 'Cart\CartController', [
+		'parameters' => [
+			'cart' => 'productVariation'
+		]
+	]);
