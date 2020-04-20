@@ -18,13 +18,28 @@ class CartController extends Controller
 		$this->middleware('auth:api');
 	}
 
-	public function index(Request $request)
+	public function index(Request $request, Cart $cart)
 	{
+		$cart->sync();
+
 		$request->user()->load([
-			'cart.product', 'cart.product.variations.stock', 'cart.stock'
+			'cart.product', 'cart.product.variations.stock', 'cart.stock', 'cart.type'
 		]);
-		
-		return new CartResource($request->user());
+
+		return (new CartResource($request->user()))
+			->additional([
+				'meta' => $this->meta($request, $cart)
+			]);
+	}
+
+	protected function meta(Request $request, Cart $cart)
+	{
+		return [
+			'empty' => $cart->isEmpty(),
+			'subtotal' => $cart->subtotal()->formatted(),
+			'total' => $cart->total()->formatted(),
+			'changed' => $cart->hasChanged()
+		];
 	}
 
     public function store(CartStoreRequest $request, Cart $cart)
