@@ -3,6 +3,8 @@
 
 	Route::resource('categories', 'Category\CategoryController');
 	Route::resource('products', 'Products\ProductController');
+	Route::resource('addresses', 'Addresses\AddressController');
+	Route::resource('countries', 'Countries\CountryController');
 
 	Route::post('auth/signup', 'Auth\SignUpController@action');
 	Route::post('auth/signin', 'Auth\SignInController@action');

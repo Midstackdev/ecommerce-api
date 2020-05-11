@@ -74,4 +74,9 @@ class User extends Authenticatable implements JWTSubject
                 ->withPivot('quantity')
                 ->withTimestamps();
     }
+
+    public function addresses()
+    {
+        return $this->hasMany(Address::class);
+    }
 }
