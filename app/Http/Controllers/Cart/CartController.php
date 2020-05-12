@@ -37,7 +37,7 @@ class CartController extends Controller
 		return [
 			'empty' => $cart->isEmpty(),
 			'subtotal' => $cart->subtotal()->formatted(),
-			'total' => $cart->total()->formatted(),
+			'total' => $cart->withShipping($request->shipping_method_id)->total()->formatted(),
 			'changed' => $cart->hasChanged()
 		];
 	}
