@@ -2,12 +2,16 @@
 
 namespace Tests\Feature\Orders;
 
+use App\Events\Order\OrderCreated;
 use App\Models\Address;
 use App\Models\Country;
+use App\Models\ProductVariation;
 use App\Models\ShippingMethod;
+use App\Models\Stock;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
 
 class OrderStoreTest extends TestCase
@@ -97,6 +101,10 @@ class OrderStoreTest extends TestCase
     {
         $user = factory(User::class)->create();
 
+        $user->cart()->sync(
+            $product = $this->productWithStock()
+        );
+
         list($address, $shipping) = $this->orderDependencies($user);
 
         $this->jsonAs($user, 'POST', 'api/orders', [
@@ -109,6 +117,100 @@ class OrderStoreTest extends TestCase
             'shipping_method_id' => $shipping->id,
             'address_id' => $address->id
         ]);
+    }
+
+    public function test_it_attaches_the_product_to_the_order()
+    {
+        $user = factory(User::class)->create();
+
+        $user->cart()->sync(
+            $product = $this->productWithStock()
+        );
+
+        list($address, $shipping) = $this->orderDependencies($user);
+
+        $response = $this->jsonAs($user, 'POST', 'api/orders', [
+            'shipping_method_id' => $shipping->id,
+            'address_id' => $address->id
+        ]);
+
+        $this->assertDatabaseHas('product_variation_order', [
+            'product_variation_id' => $product->id,
+            'order_id' => json_decode($response->getContent())->data->id
+        ]);
+    }
+
+    public function test_it_fires_an_order_created_event()
+    {
+        Event::fake();
+
+        $user = factory(User::class)->create();
+
+        $user->cart()->sync(
+            $product = $this->productWithStock()
+        );
+
+        list($address, $shipping) = $this->orderDependencies($user);
+
+        $response = $this->jsonAs($user, 'POST', 'api/orders', [
+            'shipping_method_id' => $shipping->id,
+            'address_id' => $address->id
+        ]);
+
+        Event::assertDispatched(OrderCreated::class, function ($event) use ($response) {
+            return $event->order->id === json_decode($response->getContent())->data->id;
+        });
+    }
+
+    public function test_it_empties_the_cart_when_ordering()
+    {
+
+        $user = factory(User::class)->create();
+
+        $user->cart()->sync(
+            $product = $this->productWithStock()
+        );
+
+        list($address, $shipping) = $this->orderDependencies($user);
+
+        $this->jsonAs($user, 'POST', 'api/orders', [
+            'shipping_method_id' => $shipping->id,
+            'address_id' => $address->id
+        ]);
+
+        $this->assertEmpty($user->cart);
+    }
+
+    public function test_it_fails_to_the_create_order_if_cart_is_empty()
+    {
+        $user = factory(User::class)->create();
+
+        $user->cart()->sync([
+            ($product = $this->productWithStock())->id => [
+                'quantity' => 0
+            ]
+        ]);
+
+        list($address, $shipping) = $this->orderDependencies($user);
+
+        $this->jsonAs($user, 'POST', 'api/orders', [
+            'shipping_method_id' => $shipping->id,
+            'address_id' => $address->id
+        ])
+
+        ->assertStatus(400);
+    }
+
+
+    protected function productWithStock()
+    {
+        $product = factory(ProductVariation::class)->create();
+
+        factory(Stock::class)->create([
+            'product_variation_id' => $product->id
+        ]);
+
+        return $product;
     }
 
     protected function orderDependencies(User $user)
