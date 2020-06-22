@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Cart\Money;
 use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model
@@ -17,6 +18,16 @@ class Order extends Model
     	'address_id',
         'subtotal',
     ];
+
+    public function getSubtotalAttribute($subtotal)
+    {
+        return new Money($subtotal);
+    }
+
+    public function total()
+    {
+        return $this->subtotal->add($this->shippingMethod->price);
+    }
 
     public static function boot()
     {
