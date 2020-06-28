@@ -5,6 +5,7 @@ namespace Tests\Feature\Orders;
 use App\Events\Order\OrderCreated;
 use App\Models\Address;
 use App\Models\Country;
+use App\Models\PaymentMethod;
 use App\Models\ProductVariation;
 use App\Models\ShippingMethod;
 use App\Models\Stock;
@@ -129,16 +130,18 @@ class OrderStoreTest extends TestCase
             $product = $this->productWithStock()
         );
 
-        list($address, $shipping) = $this->orderDependencies($user);
+        list($address, $shipping, $payment) = $this->orderDependencies($user);
 
         $this->jsonAs($user, 'POST', 'api/orders', [
             'shipping_method_id' => $shipping->id,
+            'payment_method_id' => $payment->id,
             'address_id' => $address->id
         ]);
 
         $this->assertDatabaseHas('orders', [
             'user_id' => $user->id,
             'shipping_method_id' => $shipping->id,
+            'payment_method_id' => $payment->id,
             'address_id' => $address->id
         ]);
     }
@@ -151,10 +154,11 @@ class OrderStoreTest extends TestCase
             $product = $this->productWithStock()
         );
 
-        list($address, $shipping) = $this->orderDependencies($user);
+        list($address, $shipping, $payment) = $this->orderDependencies($user);
 
         $response = $this->jsonAs($user, 'POST', 'api/orders', [
             'shipping_method_id' => $shipping->id,
+            'payment_method_id' => $payment->id,
             'address_id' => $address->id
         ]);
 
@@ -174,10 +178,11 @@ class OrderStoreTest extends TestCase
             $product = $this->productWithStock()
         );
 
-        list($address, $shipping) = $this->orderDependencies($user);
+        list($address, $shipping, $payment) = $this->orderDependencies($user);
 
         $response = $this->jsonAs($user, 'POST', 'api/orders', [
             'shipping_method_id' => $shipping->id,
+            'payment_method_id' => $payment->id,
             'address_id' => $address->id
         ]);
 
@@ -195,10 +200,11 @@ class OrderStoreTest extends TestCase
             $product = $this->productWithStock()
         );
 
-        list($address, $shipping) = $this->orderDependencies($user);
+        list($address, $shipping, $payment) = $this->orderDependencies($user);
 
         $this->jsonAs($user, 'POST', 'api/orders', [
             'shipping_method_id' => $shipping->id,
+            'payment_method_id' => $payment->id,
             'address_id' => $address->id
         ]);
 
@@ -215,10 +221,11 @@ class OrderStoreTest extends TestCase
             ]
         ]);
 
-        list($address, $shipping) = $this->orderDependencies($user);
+        list($address, $shipping, $payment) = $this->orderDependencies($user);
 
         $this->jsonAs($user, 'POST', 'api/orders', [
             'shipping_method_id' => $shipping->id,
+            'payment_method_id' => $payment->id,
             'address_id' => $address->id
         ])
 
@@ -247,7 +254,11 @@ class OrderStoreTest extends TestCase
 
         $shipping->countries()->attach($address->country);
 
-        return [$address, $shipping];
+        $payment = factory(PaymentMethod::class)->create([
+            'user_id' => $user->id
+        ]);
+
+        return [$address, $shipping, $payment];
 
     }
 }
