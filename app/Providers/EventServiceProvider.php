@@ -30,6 +30,7 @@ class EventServiceProvider extends ServiceProvider
         ],
 
         'App\Events\Order\OrderPaid' => [
+            'App\Listeners\Order\CreateTransaction',
             'App\Listeners\Order\MarkOrderProcessing',
             
         ]
